@@ -1,0 +1,13 @@
+
+boto3
+
+jupyter
+matplotlib
+numpy
+pandas
+
+tensorflow-datasets
+
+
+# uncomment for local dependency inistall
+# tfnightly

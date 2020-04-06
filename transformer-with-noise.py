@@ -8,14 +8,13 @@
 # make sure you are using the latest tf2
 # pip install tf-nightly
 
-import tensorflow_datasets as tfds
-import tensorflow as tf
-from functools import partial
-import logging
-
 import time
+import logging
+from functools import partial
+
 import numpy as np
-import matplotlib.pyplot as plt
+import tensorflow as tf
+import tensorflow_datasets as tfds
 
 BUFFER_SIZE = 20000
 BATCH_SIZE = 64
@@ -42,7 +41,7 @@ def load(file1, file2):
                         tf.constant(next(f2)),
                     )
                 except Exception as e:
-                    print(e)
+                    log.error(e)
                     return data
 
 
@@ -447,15 +446,15 @@ class Transformer(tf.keras.Model):
 ##########################################################################
 
 # PAPER HYPERPARAMETERS
-num_layers = 6
-d_model = 512
-dff = 2048
-num_heads = 8
-
-# num_layers = 4
-# d_model = 128
-# dff = 512
+# num_layers = 6
+# d_model = 512
+# dff = 2048
 # num_heads = 8
+
+num_layers = 4
+d_model = 128
+dff = 512
+num_heads = 8
 
 input_vocab_size = tokenizer_pt.vocab_size + 2
 target_vocab_size = tokenizer_en.vocab_size + 2
@@ -590,17 +589,17 @@ for epoch in range(EPOCHS):
     train_step(inp, tar)
 
     if batch % 50 == 0:
-      print ('Epoch {} Batch {} Loss {:.4f} Accuracy {:.4f}'.format(
+      log.info('Epoch {} Batch {} Loss {:.4f} Accuracy {:.4f}'.format(
           epoch + 1, batch, train_loss.result(), train_accuracy.result()))
 
   if (epoch + 1) % 5 == 0:
     ckpt_save_path = ckpt_manager.save()
-    print ('Saving checkpoint for epoch {} at {}'.format(epoch+1,
+    log.info('Saving checkpoint for epoch {} at {}'.format(epoch+1,
                                                          ckpt_save_path))
 
-  print ('Epoch {} Loss {:.4f} Accuracy {:.4f}'.format(epoch + 1,
+  log.info('Epoch {} Loss {:.4f} Accuracy {:.4f}'.format(epoch + 1,
                                                 train_loss.result(),
                                                 train_accuracy.result()))
 
-  print ('Time taken for 1 epoch: {} secs\n'.format(time.time() - start))
+  log.info('Time taken for 1 epoch: {} secs\n'.format(time.time() - start))
 
