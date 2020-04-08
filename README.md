@@ -12,4 +12,15 @@ Various snippets for reference
 ```
 # Head 500k lines, replace entities, and then save file
 head -n 500000  ../original/baseline.tok.en | perl -MHTML::Entities -pe 'decode_entities($_);' > ./baseline.500000.tok.en
+
+
+# clean validation set
+cat newstest2016-deen-ref.en.sgm | sed 's/<seg id="[0-9]*">//g; s/<\/seg>//g; s/<\/*p>//g; s/<refset.*>//g; s/<\/refset>//g; s/<doc .*>//g; s/<\/doc>//g'  | sed '/^$/d' >newstest2016.en
+cat newstest2016-deen-src.de.sgm | sed 's/<seg id="[0-9]*">//g; s/<\/seg>//g; s/<\/*p>//g; s/<srcset.*>//g; s/<\/srcset>//g; s/<doc .*>//g; s/<\/doc>//g'  | sed '/^$/d' >newstest2016.de
+
+# clean test set
+cat newstest2017-deen-ref.en.sgm | sed 's/<seg id="[0-9]*">//g; s/<\/seg>//g; s/<\/*p>//g; s/<refset.*>//g; s/<\/refset>//g; s/<doc .*>//g; s/<\/doc>//g'  | sed '/^$/d' >newstest2017.en
+cat newstest2017-deen-src.de.sgm | sed 's/<seg id="[0-9]*">//g; s/<\/seg>//g; s/<\/*p>//g; s/<srcset.*>//g; s/<\/srcset>//g; s/<doc .*>//g; s/<\/doc>//g'  | sed '/^$/d' >newstest2017.de
+
+
 ```

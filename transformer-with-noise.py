@@ -36,10 +36,22 @@ parser.add_argument(
     default=os.environ.get("BATCHSIZE", 50)
 )
 parser.add_argument(
+    '-f', '--buffersize',
+    help="buffer size for training",
+    type=int,
+    default=os.environ.get("BUFFERSIZE", 20000)
+)
+parser.add_argument(
     '-e', '--epochs',
     help="epochs to train",
     type=int,
     default=os.environ.get("EPOCHS", 25)
+)
+parser.add_argument(
+    '-l', '--maxlength',
+    help="max length of sentence to allow",
+    type=int,
+    default=os.environ.get("MAXLENGTH", 50)
 )
 parser.add_argument(
     'files',
@@ -50,12 +62,10 @@ parser.add_argument(
 options = parser.parse_args()
 
 
-BUFFER_SIZE = 20000
+BUFFER_SIZE = options.buffersize
 BATCH_SIZE = options.batchsize
 EPOCHS = options.epochs
-
-# Note: To keep this example small and relatively fast, drop examples with a length of over 40 tokens.
-# MAX_LENGTH = 40
+MAX_LENGTH = options.maxlength
 
 checkpoint_path = "checkpoints/train-paper-weights"
 
@@ -129,21 +139,26 @@ def tf_encode(pt, en):
 
 
 # use only those sentences that are less than max length
-# def filter_max_length(x, y, max_length=MAX_LENGTH):
-#   return tf.logical_and(tf.size(x) <= max_length,
-#                         tf.size(y) <= max_length)
+def filter_max_length(x, y, max_length=MAX_LENGTH):
+  return tf.logical_and(tf.size(x) <= max_length,
+                        tf.size(y) <= max_length)
 
 logging.info("start: data preprocessing setup")
 
+# https://www.tensorflow.org/api_docs/python/tf/data/Dataset#shuffle
+# https://www.tensorflow.org/api_docs/python/tf/data/Dataset#cache
 train_preprocessed = (
     train_examples
     .map(tf_encode)
+    .filter(filter_max_length)
     .cache()
-    .shuffle(BUFFER_SIZE))
+    .shuffle(BUFFER_SIZE)
+)
 
 val_preprocessed = (
     val_examples
     .map(tf_encode)
+    .filter(filter_max_length)
 )
 
 train_dataset = (train_preprocessed
