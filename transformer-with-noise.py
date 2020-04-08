@@ -8,7 +8,9 @@
 # make sure you are using the latest tf2
 # pip install tf-nightly
 
+import os
 import time
+import argparse
 import logging
 from functools import partial
 
@@ -16,22 +18,55 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
+
+##########################################################################
+## Parse arguments
+##########################################################################
+
+parser = argparse.ArgumentParser(description='CMSC828B Noise Project - Transformer Trainer')
+parser.add_argument(
+    '-t', '--test',
+    help="use the smaller transformer hyperparameters",
+    action="store_true"
+)
+parser.add_argument(
+    '-b', '--batchsize',
+    help="batch size for training",
+    type=int,
+    default=os.environ.get("BATCHSIZE", 50)
+)
+parser.add_argument(
+    '-e', '--epochs',
+    help="epochs to train",
+    type=int,
+    default=os.environ.get("EPOCHS", 25)
+)
+parser.add_argument(
+    'files',
+    help="files to use for training (expected to be found in ./data directory)",
+    nargs=2,
+    type=str
+)
+options = parser.parse_args()
+
+
 BUFFER_SIZE = 20000
-BATCH_SIZE = 64
+BATCH_SIZE = options.batchsize
+EPOCHS = options.epochs
 
 # Note: To keep this example small and relatively fast, drop examples with a length of over 40 tokens.
-MAX_LENGTH = 40
+# MAX_LENGTH = 40
 
 checkpoint_path = "checkpoints/train-paper-weights"
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
+logging.info(options)
 
 ##########################################################################
 ## Initial data load
 ##########################################################################
 
 def load(file1, file2):
-    data = []
     with open(file1, "r") as f1:
         with open(file2, "r") as f2:
             while True:
@@ -40,13 +75,15 @@ def load(file1, file2):
                         tf.constant(next(f1)),
                         tf.constant(next(f2)),
                     )
+                except StopIteration as e:
+                    return
                 except Exception as e:
-                    log.error(e)
-                    return data
+                    logging.error(e)
+                    raise
 
-
-
-loader = partial(load, 'data/baseline.50000.tok.de', 'data/baseline.50000.tok.en')
+logging.info("start: data load")
+files = list(map(lambda x: f"data/{x}", options.files))
+loader = partial(load, *files)
 train_examples = tf.data.Dataset.from_generator(
     loader,
     (tf.string, tf.string),
@@ -62,6 +99,7 @@ val_examples = tf.data.Dataset.from_generator(
 ## Create tokenizers
 ##########################################################################
 
+logging.info("start: tokenization")
 tokenizer_en = tfds.features.text.SubwordTextEncoder.build_from_corpus(
     (en.numpy() for pt, en in train_examples), target_vocab_size=2**13)
 
@@ -91,24 +129,22 @@ def tf_encode(pt, en):
 
 
 # use only those sentences that are less than max length
-# TODO: remove for real work
-def filter_max_length(x, y, max_length=MAX_LENGTH):
-  return tf.logical_and(tf.size(x) <= max_length,
-                        tf.size(y) <= max_length)
+# def filter_max_length(x, y, max_length=MAX_LENGTH):
+#   return tf.logical_and(tf.size(x) <= max_length,
+#                         tf.size(y) <= max_length)
 
+logging.info("start: data preprocessing setup")
 
 train_preprocessed = (
     train_examples
     .map(tf_encode)
-    .filter(filter_max_length)
     .cache()
     .shuffle(BUFFER_SIZE))
 
 val_preprocessed = (
     val_examples
     .map(tf_encode)
-    .filter(filter_max_length))
-
+)
 
 train_dataset = (train_preprocessed
                  .padded_batch(BATCH_SIZE)
@@ -446,15 +482,20 @@ class Transformer(tf.keras.Model):
 ##########################################################################
 
 # PAPER HYPERPARAMETERS
-# num_layers = 6
-# d_model = 512
-# dff = 2048
-# num_heads = 8
+if options.test:
+    logging.info("using testing hyperparameters for transformer")
+    num_layers = 4
+    d_model = 128
+    dff = 512
+    num_heads = 8
 
-num_layers = 4
-d_model = 128
-dff = 512
-num_heads = 8
+else:
+    logging.info("using paper hyperparameters for transformer")
+    num_layers = 6
+    d_model = 512
+    dff = 2048
+    num_heads = 8
+
 
 input_vocab_size = tokenizer_pt.vocab_size + 2
 target_vocab_size = tokenizer_en.vocab_size + 2
@@ -575,8 +616,6 @@ def train_step(inp, tar):
 ## Train
 ##########################################################################
 
-EPOCHS = 10
-
 logging.info("training commencing")
 for epoch in range(EPOCHS):
   start = time.time()
@@ -589,17 +628,17 @@ for epoch in range(EPOCHS):
     train_step(inp, tar)
 
     if batch % 50 == 0:
-      log.info('Epoch {} Batch {} Loss {:.4f} Accuracy {:.4f}'.format(
+      logging.info('Epoch {} Batch {} Loss {:.4f} Accuracy {:.4f}'.format(
           epoch + 1, batch, train_loss.result(), train_accuracy.result()))
 
   if (epoch + 1) % 5 == 0:
     ckpt_save_path = ckpt_manager.save()
-    log.info('Saving checkpoint for epoch {} at {}'.format(epoch+1,
+    logging.info('Saving checkpoint for epoch {} at {}'.format(epoch+1,
                                                          ckpt_save_path))
 
-  log.info('Epoch {} Loss {:.4f} Accuracy {:.4f}'.format(epoch + 1,
+  logging.info('Epoch {} Loss {:.4f} Accuracy {:.4f}'.format(epoch + 1,
                                                 train_loss.result(),
                                                 train_accuracy.result()))
 
-  log.info('Time taken for 1 epoch: {} secs\n'.format(time.time() - start))
+  logging.info('Time taken for 1 epoch: {} secs\n'.format(time.time() - start))
 

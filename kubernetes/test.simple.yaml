@@ -15,46 +15,49 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 4Gi
+      storage: 16Gi
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: batch/v1
+kind: Job
 metadata:
   name: cmsc828b-simple
   namespace: cmsc828b
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      name: cmsc828b-simple
   template:
     metadata:
       labels:
         name: cmsc828b-simple
     spec:
-      # affinity:
-      #   nodeAffinity:
-      #     requiredDuringSchedulingIgnoredDuringExecution:
-      #       nodeSelectorTerms:
-      #       - matchExpressions:
-      #         - key: pingthings.io/role-compute
-      #           operator: Exists
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: pingthings.io/role-compute
+                operator: Exists
+      restartPolicy: OnFailure
       containers:
       - name: cmsc828b-simple
+        imagePullPolicy: Always
         image: looselycoupled/cmsc828b-noise-simple
-        command: ["python3", "/project/transformer-with-noise.py"]
+        command: ["./execute.sh"]
         args: []
-        env: []
+        env:
+        - name: TRAINING_FILE1
+          value: baseline.tok.de
+        - name: TRAINING_FILE2
+          value: baseline.tok.en
         volumeMounts:
         - name: checkpoints
           mountPath: /project/checkpoints
         ports: []
         resources:
-          limits: {"memory":"4Gi"}
-          requests: {"cpu":"1","memory":"4Gi"}
+          limits:
+            nvidia.com/gpu: 1 # requesting 1 GPU
+            memory: "40Gi"
+          requests: {"cpu":"1","memory":"40Gi"}
       terminationGracePeriodSeconds: 30
       volumes:
       - name: checkpoints
         persistentVolumeClaim:
           claimName: cmsc828b-workspace
-
