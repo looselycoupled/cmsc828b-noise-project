@@ -1,6 +1,6 @@
 FROM tensorflow/tensorflow:nightly-gpu-py3
 
-RUN apt update && apt install -y wget curl vim git
+RUN apt update && apt install -y wget curl vim git groff
 
 
 ADD ./ /project

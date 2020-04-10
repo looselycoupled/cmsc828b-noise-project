@@ -51,7 +51,7 @@ parser.add_argument(
     '-l', '--maxlength',
     help="max length of sentence to allow",
     type=int,
-    default=os.environ.get("MAXLENGTH", 50)
+    default=os.environ.get("MAXLENGTH", 100)
 )
 parser.add_argument(
     'files',
@@ -62,15 +62,42 @@ parser.add_argument(
 options = parser.parse_args()
 
 
+##########################################################################
+## Model Hyperparameters
+##########################################################################
+
 BUFFER_SIZE = options.buffersize
 BATCH_SIZE = options.batchsize
 EPOCHS = options.epochs
 MAX_LENGTH = options.maxlength
+VOCAB_SIZE = 50000  # from original paper
 
-checkpoint_path = "checkpoints/train-paper-weights"
+if options.test:
+    # TESTING (LIGHT) HYPERPARAMETERS
+    logging.info("using testing hyperparameters for transformer")
+    num_layers = 4
+    d_model = 128
+    dff = 512
+    num_heads = 8
+else:
+    # PAPER HYPERPARAMETERS
+    logging.info("using paper hyperparameters for transformer")
+    num_layers = 6
+    d_model = 512
+    dff = 2048
+    num_heads = 8
 
-logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
+input_vocab_size = VOCAB_SIZE + 2
+target_vocab_size = VOCAB_SIZE + 2
+dropout_rate = 0.1
+
+checkpoint_path = "checkpoints/train"
+
+# setup logging for all further actions / tensorflow clobbers this
+logging.getLogger().setLevel(logging.DEBUG)
+logging.basicConfig(format='%(asctime)s [%(levelname)s]: %(message)s', level=logging.DEBUG)
 logging.info(options)
+logging.info("logging configured")
 
 ##########################################################################
 ## Initial data load
@@ -109,13 +136,13 @@ val_examples = tf.data.Dataset.from_generator(
 ## Create tokenizers
 ##########################################################################
 
-logging.info("start: tokenization")
+logging.info("start: tokenization (en)")
 tokenizer_en = tfds.features.text.SubwordTextEncoder.build_from_corpus(
-    (en.numpy() for pt, en in train_examples), target_vocab_size=2**13)
+    (en.numpy() for pt, en in train_examples), target_vocab_size=VOCAB_SIZE)
 
+logging.info("start: tokenization (other)")
 tokenizer_pt = tfds.features.text.SubwordTextEncoder.build_from_corpus(
-    (pt.numpy() for pt, en in train_examples), target_vocab_size=2**13)
-
+    (pt.numpy() for pt, en in train_examples), target_vocab_size=VOCAB_SIZE)
 
 
 ##########################################################################
@@ -123,6 +150,9 @@ tokenizer_pt = tfds.features.text.SubwordTextEncoder.build_from_corpus(
 ##########################################################################
 
 def encode(lang1, lang2):
+  """
+  adds SOS and EOS around encoded sentence for each language
+  """
   lang1 = [tokenizer_pt.vocab_size] + tokenizer_pt.encode(
       lang1.numpy()) + [tokenizer_pt.vocab_size+1]
 
@@ -132,6 +162,9 @@ def encode(lang1, lang2):
 
 
 def tf_encode(pt, en):
+  """
+  Encoding wrapper suitable for faster tensorflow
+  """
   result_pt, result_en = tf.py_function(encode, [pt, en], [tf.int64, tf.int64])
   result_pt.set_shape([None])
   result_en.set_shape([None])
@@ -493,31 +526,6 @@ class Transformer(tf.keras.Model):
 
 
 ##########################################################################
-## Model Hyperparameters
-##########################################################################
-
-# PAPER HYPERPARAMETERS
-if options.test:
-    logging.info("using testing hyperparameters for transformer")
-    num_layers = 4
-    d_model = 128
-    dff = 512
-    num_heads = 8
-
-else:
-    logging.info("using paper hyperparameters for transformer")
-    num_layers = 6
-    d_model = 512
-    dff = 2048
-    num_heads = 8
-
-
-input_vocab_size = tokenizer_pt.vocab_size + 2
-target_vocab_size = tokenizer_en.vocab_size + 2
-dropout_rate = 0.1
-
-
-##########################################################################
 ## Optimizer
 ##########################################################################
 
@@ -559,15 +567,8 @@ train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy
 
 
 ##########################################################################
-## Training & Checkpointing Setup
+## Masking
 ##########################################################################
-
-transformer = Transformer(num_layers, d_model, num_heads, dff,
-                          input_vocab_size, target_vocab_size,
-                          pe_input=input_vocab_size,
-                          pe_target=target_vocab_size,
-                          rate=dropout_rate)
-
 
 def create_masks(inp, tar):
   # Encoder padding mask
@@ -587,6 +588,20 @@ def create_masks(inp, tar):
   return enc_padding_mask, combined_mask, dec_padding_mask
 
 
+##########################################################################
+## Create model
+##########################################################################
+
+transformer = Transformer(num_layers, d_model, num_heads, dff,
+                          input_vocab_size, target_vocab_size,
+                          pe_input=input_vocab_size,
+                          pe_target=target_vocab_size,
+                          rate=dropout_rate)
+
+
+##########################################################################
+## Checkpointing Setup
+##########################################################################
 
 ckpt = tf.train.Checkpoint(transformer=transformer,
                            optimizer=optimizer)
@@ -599,6 +614,9 @@ if ckpt_manager.latest_checkpoint:
 
 
 
+##########################################################################
+## Train step setup
+##########################################################################
 
 train_step_signature = [
     tf.TensorSpec(shape=(None, None), dtype=tf.int64),

@@ -5,6 +5,12 @@ This project extends Khayrallah et al's original work on the impact of various t
 > Khayrallah, Huda, and Philipp Koehn. “On the Impact of Various Types of Noise on Neural Machine Translation.” Proceedings of the 2nd Workshop on Neural Machine Translation and Generation, Association for Computational Linguistics, 2018, pp. 74–83. ACLWeb, doi:10.18653/v1/W18-2709.
 
 
+## Todo
+
+* load saved checkpoint and use it
+* change to using newstest for val/dev set
+* Save tokenizers so we dont have to waste time redoing it each test run
+
 ## Notes
 
 Various snippets for reference
