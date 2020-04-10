@@ -2,6 +2,16 @@
 
 Various notes for later.
 
+# Log
+
+**Thu Apr 9 23:54:59 2020 -0400**
+
+* added ability to save/load tokenization file to save time
+* added three jobs to cluster testing latest transformer with 100,150,200 sized batchs
+* pulled existing tf checkpoint to local machine to experiment with
+* set vocab length to 50k to match paper
+
+
 ## Sample Training 1
 
 * local computer
