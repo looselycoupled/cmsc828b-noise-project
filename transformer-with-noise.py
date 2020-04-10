@@ -136,13 +136,25 @@ val_examples = tf.data.Dataset.from_generator(
 ## Create tokenizers
 ##########################################################################
 
-logging.info("start: tokenization (en)")
-tokenizer_en = tfds.features.text.SubwordTextEncoder.build_from_corpus(
-    (en.numpy() for pt, en in train_examples), target_vocab_size=VOCAB_SIZE)
+if os.path.exists("english.subwords"):
+  logging.info("loading tokenization (en) from file")
+  tokenizer_en = tfds.features.text.SubwordTextEncoder.load_from_file("english")
+else:
+  logging.info("starting tokenization (en)")
+  tokenizer_en = tfds.features.text.SubwordTextEncoder.build_from_corpus(
+    (en.numpy() for pt, en in train_examples), target_vocab_size=VOCAB_SIZE
+  )
+  tokenizer_en.save_to_file("english")
 
-logging.info("start: tokenization (other)")
-tokenizer_pt = tfds.features.text.SubwordTextEncoder.build_from_corpus(
-    (pt.numpy() for pt, en in train_examples), target_vocab_size=VOCAB_SIZE)
+if os.path.exists("other.subwords"):
+  logging.info("loading tokenization (other) from file")
+  tokenizer_pt = tfds.features.text.SubwordTextEncoder.load_from_file("other")
+else:
+  logging.info("starting tokenization (other)")
+  tokenizer_pt = tfds.features.text.SubwordTextEncoder.build_from_corpus(
+    (pt.numpy() for pt, en in train_examples), target_vocab_size=VOCAB_SIZE
+  )
+  tokenizer_en.save_to_file("other")
 
 
 ##########################################################################
