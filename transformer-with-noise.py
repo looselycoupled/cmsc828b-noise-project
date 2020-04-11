@@ -571,6 +571,9 @@ def loss_function(real, pred):
 train_loss = tf.keras.metrics.Mean(name='train_loss')
 train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
 
+val_loss = tf.keras.metrics.Mean(name='val_loss')
+val_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='val_accuracy')
+
 
 ##########################################################################
 ## Masking
@@ -651,6 +654,25 @@ def train_step(inp, tar):
   train_accuracy(tar_real, predictions)
 
 
+@tf.function(input_signature=train_step_signature)
+def val_step(inp, tar):
+  tar_inp = tar[:, :-1]
+  tar_real = tar[:, 1:]
+
+  enc_padding_mask, combined_mask, dec_padding_mask = create_masks(inp, tar_inp)
+
+  predictions, _ = transformer(inp, tar_inp,
+    False,
+    enc_padding_mask,
+    combined_mask,
+    dec_padding_mask
+  )
+  loss = loss_function(tar_real, predictions)
+
+  val_loss(loss)
+  val_accuracy(tar_real, predictions)
+
+
 ##########################################################################
 ## Train
 ##########################################################################
@@ -662,7 +684,7 @@ for epoch in range(EPOCHS):
   train_loss.reset_states()
   train_accuracy.reset_states()
 
-  # inp -> other_language, tar -> english
+  # loop through training data in batches and report periodically
   for (batch, (inp, tar)) in enumerate(train_dataset):
     train_step(inp, tar)
 
@@ -671,12 +693,24 @@ for epoch in range(EPOCHS):
           epoch + 1, batch, train_loss.result(), train_accuracy.result()
       ))
 
-  if (epoch + 1) % 5 == 0:
+  # checkpoint every X batches
+  if (epoch + 1) % 2 == 0:
     ckpt_save_path = ckpt_manager.save()
     logging.info('Saving checkpoint for epoch {} at {}'.format(epoch+1, ckpt_save_path))
 
-  logging.info('Epoch {} Loss {:.4f} Accuracy {:.4f}'.format(epoch + 1,
-                                                train_loss.result(),
-                                                train_accuracy.result()))
+  # Validation
+  val_loss.reset_states()
+  val_accuracy.reset_states()
+  for (batch, (inp, tar)) in enumerate(val_dataset):
+    val_step(inp, tar)
 
+  # Report on training/validation every epoch
+  logging.info('Epoch {} Train Loss {:.4f} Train Accuracy {:.4f}'.format(
+    epoch + 1, train_loss.result(), train_accuracy.result()
+  ))
+  logging.info('Epoch {} Val Loss {:.4f} Val Accuracy {:.4f}'.format(
+    epoch + 1, val_loss.result(), val_accuracy.result()
+  ))
+
+  # Report time per epoch
   logging.info('Time taken for epoch: {} secs\n'.format(time.time() - start))
