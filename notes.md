@@ -2,7 +2,7 @@
 
 Various notes for later.
 
-# Log
+## Log
 
 **Thu Apr 9 23:54:59 2020 -0400**
 
@@ -11,6 +11,46 @@ Various notes for later.
 * pulled existing tf checkpoint to local machine to experiment with
 * set vocab length to 50k to match paper
 
+
+## Recent Error
+
+```
+Traceback (most recent call last):
+  File "transformer-with-noise.py", line 673, in <module>
+    train_step(inp, tar)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow/python/eager/def_function.py", line 608, in __call__
+    result = self._call(*args, **kwds)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow/python/eager/def_function.py", line 672, in _call
+    return self._stateless_fn(*args, **kwds)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow/python/eager/function.py", line 2420, in __call__
+    return graph_function._filtered_call(args, kwargs)  # pylint: disable=protected-access
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow/python/eager/function.py", line 1665, in _filtered_call
+    self.captured_inputs)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow/python/eager/function.py", line 1746, in _call_flat
+    ctx, args, cancellation_manager=cancellation_manager))
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow/python/eager/function.py", line 598, in call
+    ctx=ctx)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow/python/eager/execute.py", line 60, in quick_execute
+    inputs, attrs, num_outputs)
+tensorflow.python.framework.errors_impl.InvalidArgumentError: 2 root error(s) found.
+  (0) Invalid argument:  indices[99,0] = 50272 is not in [0, 50002)
+	 [[node transformer/decoder/embedding_1/embedding_lookup (defined at transformer-with-noise.py:492) ]]
+	 [[GroupCrossDeviceControlEdges_0/Adam/Adam/Const/_709]]
+  (1) Invalid argument:  indices[99,0] = 50272 is not in [0, 50002)
+	 [[node transformer/decoder/embedding_1/embedding_lookup (defined at transformer-with-noise.py:492) ]]
+0 successful operations.
+0 derived errors ignored. [Op:__inference_train_step_28309015]
+
+Errors may have originated from an input operation.
+Input Source operations connected to node transformer/decoder/embedding_1/embedding_lookup:
+ strided_slice (defined at transformer-with-noise.py:640)
+
+Input Source operations connected to node transformer/decoder/embedding_1/embedding_lookup:
+ strided_slice (defined at transformer-with-noise.py:640)
+
+Function call stack:
+train_step -> train_step
+```
 
 ## Sample Training 1
 

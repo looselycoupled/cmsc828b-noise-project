@@ -119,8 +119,8 @@ def load(file1, file2):
                     raise
 
 logging.info("start: data load")
-files = list(map(lambda x: f"data/{x}", options.files))
-loader = partial(load, *files)
+# files = list(map(lambda x: f"data/{x}", options.files))
+loader = partial(load, *options.files)
 train_examples = tf.data.Dataset.from_generator(
     loader,
     (tf.string, tf.string),
