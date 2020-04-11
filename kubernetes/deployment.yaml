@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: train-batch100-len200-pvc
+  name: sandbox-pvc
   namespace: cmsc828b
   labels:
-    app: train-batch100-len200-pvc
+    app: sandbox-pvc
 spec:
   accessModes:
     - ReadWriteOnce
@@ -12,16 +12,20 @@ spec:
     requests:
       storage: 24Gi
 ---
-apiVersion: batch/v1
-kind: Job
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: train-batch100-len200
+  name: sandbox
   namespace: cmsc828b
 spec:
+  replicas: 1
+  selector:
+      matchLabels:
+        name: sandbox
   template:
     metadata:
       labels:
-        name: train-batch100-len200
+        name: sandbox
     spec:
       affinity:
         nodeAffinity:
@@ -30,13 +34,12 @@ spec:
             - matchExpressions:
               - key: pingthings.io/role-compute
                 operator: Exists
-      restartPolicy: OnFailure
       containers:
-      - name: train-batch100-len200
+      - name: sandbox
         imagePullPolicy: Always
         image: looselycoupled/cmsc828b-noise-simple
-        command: ["./execute.sh"]
-        args: []
+        command: [ "/bin/bash", "-c", "--" ]
+        args: [ "while true; do sleep 30; done;" ]
         env:
         - name: TRAINING_FILE1
           value: baseline.tok.de
@@ -59,4 +62,4 @@ spec:
       volumes:
       - name: checkpoints
         persistentVolumeClaim:
-          claimName: train-batch100-len200-pvc
+          claimName: sandbox-pvc

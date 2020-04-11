@@ -11,3 +11,4 @@ WORKDIR /project
 RUN pip install -U pip
 RUN pip install -r requirements.txt
 RUN pip install awscli
+RUN rm private.md || true

@@ -33,7 +33,7 @@ parser.add_argument(
     '-b', '--batchsize',
     help="batch size for training",
     type=int,
-    default=os.environ.get("BATCHSIZE", 50)
+    default=os.environ.get("BATCHSIZE", 64)
 )
 parser.add_argument(
     '-f', '--buffersize',
@@ -78,19 +78,15 @@ if options.test:
     num_layers = 4
     d_model = 128
     dff = 512
-    num_heads = 8
 else:
     # PAPER HYPERPARAMETERS
     logging.info("using paper hyperparameters for transformer")
     num_layers = 6
     d_model = 512
     dff = 2048
-    num_heads = 8
 
-input_vocab_size = VOCAB_SIZE + 2
-target_vocab_size = VOCAB_SIZE + 2
+num_heads = 8
 dropout_rate = 0.1
-
 checkpoint_path = "checkpoints/train"
 
 # setup logging for all further actions / tensorflow clobbers this
@@ -119,17 +115,11 @@ def load(file1, file2):
                     raise
 
 logging.info("start: data load")
-# files = list(map(lambda x: f"data/{x}", options.files))
 loader = partial(load, *options.files)
-train_examples = tf.data.Dataset.from_generator(
-    loader,
-    (tf.string, tf.string),
-)
-loader = partial(load, 'data/baseline.val.tok.de', 'data/baseline.val.tok.en')
-val_examples = tf.data.Dataset.from_generator(
-    loader,
-    (tf.string, tf.string),
-)
+train_examples = tf.data.Dataset.from_generator(loader, (tf.string, tf.string))
+
+loader = partial(load, 'data/validation/newstest2016.de', 'data/validation/newstest2016.en')
+val_examples = tf.data.Dataset.from_generator(loader, (tf.string, tf.string))
 
 
 ##########################################################################
@@ -156,6 +146,10 @@ else:
   )
   tokenizer_en.save_to_file("other")
 
+
+input_vocab_size = tokenizer_pt.vocab_size + 2
+target_vocab_size = tokenizer_en.vocab_size + 2
+logging.info(f"VOCAB_SIZE: {VOCAB_SIZE}, input_vocab_size: {input_vocab_size}, target_vocab_size: {target_vocab_size}")
 
 ##########################################################################
 ## Create final datasets
@@ -674,15 +668,15 @@ for epoch in range(EPOCHS):
 
     if batch % 50 == 0:
       logging.info('Epoch {} Batch {} Loss {:.4f} Accuracy {:.4f}'.format(
-          epoch + 1, batch, train_loss.result(), train_accuracy.result()))
+          epoch + 1, batch, train_loss.result(), train_accuracy.result()
+      ))
 
   if (epoch + 1) % 5 == 0:
     ckpt_save_path = ckpt_manager.save()
-    logging.info('Saving checkpoint for epoch {} at {}'.format(epoch+1,
-                                                         ckpt_save_path))
+    logging.info('Saving checkpoint for epoch {} at {}'.format(epoch+1, ckpt_save_path))
 
   logging.info('Epoch {} Loss {:.4f} Accuracy {:.4f}'.format(epoch + 1,
                                                 train_loss.result(),
                                                 train_accuracy.result()))
 
-  logging.info('Time taken for 1 epoch: {} secs\n'.format(time.time() - start))
+  logging.info('Time taken for epoch: {} secs\n'.format(time.time() - start))
