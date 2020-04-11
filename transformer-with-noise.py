@@ -10,6 +10,7 @@
 
 import os
 import time
+import json
 import argparse
 import logging
 from functools import partial
@@ -676,6 +677,13 @@ def val_step(inp, tar):
 ##########################################################################
 ## Train
 ##########################################################################
+logs = {
+  'train_accuracies': [],
+  'train_losses': [],
+  'val_accuracies': [],
+  'val_losses': [],
+}
+
 
 logging.info("training commencing")
 for epoch in range(EPOCHS):
@@ -711,6 +719,14 @@ for epoch in range(EPOCHS):
   logging.info('Epoch {} Val Loss {:.4f} Val Accuracy {:.4f}'.format(
     epoch + 1, val_loss.result(), val_accuracy.result()
   ))
+
+
+  logs['train_accuracies'].append(float(train_accuracy.result().numpy()))
+  logs['train_losses'].append(float(train_loss.result().numpy()))
+  logs['val_accuracies'].append(float(val_accuracy.result().numpy()))
+  logs['val_losses'].append(float(val_loss.result().numpy()))
+  with open('metrics-logs.json', 'w') as f:
+    f.write(json.dumps(logs))
 
   # Report time per epoch
   logging.info('Time taken for epoch: {} secs\n'.format(time.time() - start))
