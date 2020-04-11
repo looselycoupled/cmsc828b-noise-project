@@ -8,8 +8,7 @@ This project extends Khayrallah et al's original work on the impact of various t
 ## Todo
 
 * load saved checkpoint and use it
-* change to using newstest for val/dev set
-* Save tokenizers so we dont have to waste time redoing it each test run
+* modify logging to save to file in addition to console
 
 ## Notes
 
