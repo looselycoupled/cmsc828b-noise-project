@@ -13,6 +13,7 @@ import time
 import json
 import argparse
 import logging
+from utilities.logging import setup_logging
 from functools import partial
 
 import numpy as np
@@ -21,7 +22,7 @@ import tensorflow_datasets as tfds
 
 
 ##########################################################################
-## Parse arguments
+## Parse arguments & Configure Logging
 ##########################################################################
 
 parser = argparse.ArgumentParser(description='CMSC828B Noise Project - Transformer Trainer')
@@ -63,6 +64,10 @@ parser.add_argument(
 options = parser.parse_args()
 
 
+setup_logging()
+logging.info(options)
+
+
 ##########################################################################
 ## Model Hyperparameters
 ##########################################################################
@@ -89,12 +94,6 @@ else:
 num_heads = 8
 dropout_rate = 0.1
 checkpoint_path = "checkpoints/train"
-
-# setup logging for all further actions / tensorflow clobbers this
-logging.getLogger().setLevel(logging.DEBUG)
-logging.basicConfig(format='%(asctime)s [%(levelname)s]: %(message)s', level=logging.DEBUG)
-logging.info(options)
-logging.info("logging configured")
 
 ##########################################################################
 ## Initial data load
