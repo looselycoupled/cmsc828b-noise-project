@@ -1,19 +1,14 @@
 #!/bin/bash
 
-function bail {
-  echo "Subcommand failed"
-  exit 1
-}
-
-# export TRAINING_FILE1=baseline.tok.de
-# export TRAINING_FILE2=baseline.tok.en
-
+# copy tokenizer cache up to code level where TF expects them to be
 cp data/english.subwords .
 cp data/other.subwords .
 
+# fetch datasets for training
 curl http://cmsc828b.s3.amazonaws.com/$TRAINING_FILE1 >$TRAINING_FILE1
 curl http://cmsc828b.s3.amazonaws.com/$TRAINING_FILE2 >$TRAINING_FILE2
 
+# output file listing to logs for sanity
 ls -lia data/
 
-python3 transformer-with-noise.py $TRAINING_FILE1 $TRAINING_FILE2
+python3 train.py $TRAINING_FILE1 $TRAINING_FILE2

@@ -52,7 +52,7 @@ parser.add_argument(
     '-l', '--maxlength',
     help="max length of sentence to allow",
     type=int,
-    default=os.environ.get("MAXLENGTH", 100)
+    default=os.environ.get("MAXLENGTH", 200)
 )
 parser.add_argument(
     'files',
@@ -677,56 +677,56 @@ def val_step(inp, tar):
 ##########################################################################
 ## Train
 ##########################################################################
-logs = {
-  'train_accuracies': [],
-  'train_losses': [],
-  'val_accuracies': [],
-  'val_losses': [],
-}
 
+if __name__ == "__main__":
 
-logging.info("training commencing")
-for epoch in range(EPOCHS):
-  start = time.time()
+  metrics = {
+    'train_accuracies': [],
+    'train_losses': [],
+    'val_accuracies': [],
+    'val_losses': [],
+  }
 
-  train_loss.reset_states()
-  train_accuracy.reset_states()
+  logging.info("training commencing")
 
-  # loop through training data in batches and report periodically
-  for (batch, (inp, tar)) in enumerate(train_dataset):
-    train_step(inp, tar)
+  for epoch in range(EPOCHS):
+    start = time.time()
 
-    if batch % 50 == 0:
-      logging.info('Epoch {} Batch {} Loss {:.4f} Accuracy {:.4f}'.format(
-          epoch + 1, batch, train_loss.result(), train_accuracy.result()
-      ))
+    # loop through training data in batches and report periodically
+    train_loss.reset_states()
+    train_accuracy.reset_states()
+    for (batch, (inp, tar)) in enumerate(train_dataset):
+      train_step(inp, tar)
+      if batch % 50 == 0:
+        logging.info('Epoch {} Batch {} Loss {:.4f} Accuracy {:.4f}'.format(
+            epoch + 1, batch, train_loss.result(), train_accuracy.result()
+        ))
 
-  # checkpoint every X batches
-  if (epoch + 1) % 2 == 0:
+    # Validation
+    val_loss.reset_states()
+    val_accuracy.reset_states()
+    for (batch, (inp, tar)) in enumerate(val_dataset):
+      val_step(inp, tar)
+
+    # Report on training/validation every epoch
+    logging.info('Epoch {} Train Loss {:.4f} Train Accuracy {:.4f}'.format(
+      epoch + 1, train_loss.result(), train_accuracy.result()
+    ))
+    logging.info('Epoch {} Val Loss {:.4f} Val Accuracy {:.4f}'.format(
+      epoch + 1, val_loss.result(), val_accuracy.result()
+    ))
+
+    # checkpoint every X batches
+    # if (epoch + 1) % 2 == 0:
     ckpt_save_path = ckpt_manager.save()
     logging.info('Saving checkpoint for epoch {} at {}'.format(epoch+1, ckpt_save_path))
 
-  # Validation
-  val_loss.reset_states()
-  val_accuracy.reset_states()
-  for (batch, (inp, tar)) in enumerate(val_dataset):
-    val_step(inp, tar)
+    metrics['train_accuracies'].append(float(train_accuracy.result().numpy()))
+    metrics['train_losses'].append(float(train_loss.result().numpy()))
+    metrics['val_accuracies'].append(float(val_accuracy.result().numpy()))
+    metrics['val_losses'].append(float(val_loss.result().numpy()))
+    with open('metrics-logs.json', 'w') as f:
+      f.write(json.dumps(metrics))
 
-  # Report on training/validation every epoch
-  logging.info('Epoch {} Train Loss {:.4f} Train Accuracy {:.4f}'.format(
-    epoch + 1, train_loss.result(), train_accuracy.result()
-  ))
-  logging.info('Epoch {} Val Loss {:.4f} Val Accuracy {:.4f}'.format(
-    epoch + 1, val_loss.result(), val_accuracy.result()
-  ))
-
-
-  logs['train_accuracies'].append(float(train_accuracy.result().numpy()))
-  logs['train_losses'].append(float(train_loss.result().numpy()))
-  logs['val_accuracies'].append(float(val_accuracy.result().numpy()))
-  logs['val_losses'].append(float(val_loss.result().numpy()))
-  with open('metrics-logs.json', 'w') as f:
-    f.write(json.dumps(logs))
-
-  # Report time per epoch
-  logging.info('Time taken for epoch: {} secs\n'.format(time.time() - start))
+    # Report time per epoch
+    logging.info('Time taken for epoch: {} secs\n'.format(time.time() - start))
