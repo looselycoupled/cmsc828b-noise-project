@@ -1,27 +1,27 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: t2t-mini-pvc
+  name: t2t-baseline-pvc
   namespace: cmsc828b
   labels:
-    app: t2t-mini-pvc
+    app: t2t-baseline-pvc
 spec:
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
-      storage: 48Gi
+      storage: 50Gi
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: t2t-mini
+  name: t2t-baseline
   namespace: cmsc828b
 spec:
   template:
     metadata:
       labels:
-        name: t2t-mini
+        name: t2t-baseline
     spec:
       affinity:
         nodeAffinity:
@@ -32,16 +32,16 @@ spec:
                 operator: Exists
       restartPolicy: OnFailure
       containers:
-      - name: t2t-mini
+      - name: t2t-baseline
         imagePullPolicy: Always
         image: looselycoupled/cmsc828b-tensor2tensor
         command: ["./execute.sh"]
         args: []
         env:
         - name: TRAIN_DATASET
-          value: mini
+          value: baseline
         - name: TRAIN_STEPS
-          value: "1000"
+          value: "25000"
         - name: AWS_REGION
           value: us-east-1
         - name: AWS_DEFAULT_REGION
@@ -63,4 +63,4 @@ spec:
       volumes:
       - name: checkpoints
         persistentVolumeClaim:
-          claimName: t2t-mini-pvc
+          claimName: t2t-baseline-pvc

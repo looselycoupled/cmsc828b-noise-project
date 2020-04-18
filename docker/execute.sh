@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export TRAIN_DIR="./checkpoints"
 export DATA_DIR="./data"
 export TMP_DIR="./cache"
@@ -7,10 +9,10 @@ export MODEL="transformer"
 export HPARAMS="transformer_base_single_gpu"
 export batch_size=4096
 export schedule=continuous_train_and_eval
-export train_steps=100000
+export train_steps=${TRAIN_STEPS:-100000}
 export eval_steps=1000
 
-
+mkdir $DATA_DIR || true
 
 t2t-datagen \
   --data_dir=$DATA_DIR \
@@ -31,20 +33,20 @@ t2t-trainer \
   --train_steps=$train_steps \
   --eval_steps=$eval_steps \
   --t2t_usr_dir=$USR_DIR \
-  --worker-gpu=1
+  --worker-gpu=1 >training.log
 
 
-pushd tmp/
+pushd cache/
 tar -xzf test.tar.gz
 popd
 
-export DECODE_FILE="tmp/test/newstest2017.de"
-BEAM_SIZE=4
-ALPHA=0.6
-batch_size=100
+export DECODE_FILE="cache/newstest2017.de"
+export BEAM_SIZE=4
+export ALPHA=0.6
+export batch_size=100
 
 t2t-decoder \
-  --t2t_usr_dir=$USR_DIR
+  --t2t_usr_dir=$USR_DIR \
   --data_dir=$DATA_DIR \
   --problem=$PROBLEM \
   --model=$MODEL \
@@ -54,6 +56,10 @@ t2t-decoder \
   --decode_from_file=$DECODE_FILE \
   --decode_to_file=translation.en
 
-t2t-bleu --translation=translation.en --reference=tmp/test/newstest2017.en
+t2t-bleu --translation=translation.en --reference=cache/newstest2017.en 2>&1 | tee bleu-report.txt
 
-tar -cvzf
+TARBALL_FILE="${TRAIN_DATASET}.checkpoints.`date +"%Y%m%d-%H%M"`.tar.gz"
+tar -cvzf $TARBALL_FILE checkpoints/ translation.en training.log bleu-report.txt
+aws s3 cp $TARBALL_FILE s3://cmsc828b/checkpoints/$TARBALL_FILE
+
+echo done!

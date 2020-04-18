@@ -37,12 +37,24 @@ spec:
       containers:
       - name: t2t-sandbox
         imagePullPolicy: Always
-        image: looselycoupled/cmsc828b-t2t-test
+        image: looselycoupled/cmsc828b-tensor2tensor
         command: [ "/bin/bash", "-c", "--" ]
         args: [ "while true; do sleep 30; done;" ]
         env:
         - name: PROBLEM
           value: translate_noise
+        - name: TRAIN_DATASET
+          value: mini
+        - name: TRAIN_STEPS
+          value: "1000"
+        - name: AWS_REGION
+          value: us-east-1
+        - name: AWS_DEFAULT_REGION
+          value: us-east-1
+        - name: AWS_ACCESS_KEY_ID
+          value:
+        - name: AWS_SECRET_ACCESS_KEY
+          value:
         volumeMounts:
         - name: checkpoints
           mountPath: /project/checkpoints
