@@ -56,10 +56,13 @@ t2t-decoder \
   --decode_from_file=$DECODE_FILE \
   --decode_to_file=translation.en
 
+echo "calculating bleu scores"
 t2t-bleu --translation=translation.en --reference=cache/newstest2017.en 2>&1 | tee bleu-report.txt
 
 TARBALL_FILE="${TRAIN_DATASET}.${train_steps}.checkpoints.`date +"%Y%m%d-%H%M"`.tar.gz"
-tar -cvzf $TARBALL_FILE checkpoints/ translation.en training.log bleu-report.txt
-aws s3 cp $TARBALL_FILE s3://cmsc828b/checkpoints/$TARBALL_FILE
 
+echo "creating $TARBALL_FILE"
+tar -cvzf $TARBALL_FILE checkpoints/ translation.en training.log bleu-report.txt
+echo "copying $TARBALL_FILE to s3"
+aws s3 cp $TARBALL_FILE s3://cmsc828b/checkpoints/$TARBALL_FILE
 echo done!
