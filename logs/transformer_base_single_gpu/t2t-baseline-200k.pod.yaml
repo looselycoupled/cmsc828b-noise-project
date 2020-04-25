@@ -1,0 +1,135 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: 2020-04-18T20:51:36Z
+  generateName: t2t-baseline-200k-
+  labels:
+    controller-uid: f9166a6a-dff6-47c8-88bc-47ad01d67566
+    job-name: t2t-baseline-200k
+    name: t2t-baseline-200k
+  name: t2t-baseline-200k-l4sj7
+  namespace: cmsc828b
+  ownerReferences:
+  - apiVersion: batch/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: Job
+    name: t2t-baseline-200k
+    uid: f9166a6a-dff6-47c8-88bc-47ad01d67566
+  resourceVersion: "9612312"
+  selfLink: /api/v1/namespaces/cmsc828b/pods/t2t-baseline-200k-l4sj7
+  uid: 016817c3-ef71-4f56-8a9b-240d6f85c560
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: pingthings.io/role-compute
+            operator: Exists
+  containers:
+  - command:
+    - ./execute.sh
+    env:
+    - name: TRAIN_DATASET
+      value: baseline
+    - name: TRAIN_STEPS
+      value: "200000"
+    - name: AWS_REGION
+      value: us-east-1
+    - name: AWS_DEFAULT_REGION
+      value: us-east-1
+    - name: AWS_ACCESS_KEY_ID
+      value:
+    - name: AWS_SECRET_ACCESS_KEY
+      value:
+    image: looselycoupled/cmsc828b-tensor2tensor
+    imagePullPolicy: Always
+    name: t2t-baseline-200k
+    resources:
+      limits:
+        memory: 32Gi
+        nvidia.com/gpu: "1"
+      requests:
+        cpu: "1"
+        memory: 32Gi
+        nvidia.com/gpu: "1"
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /project/checkpoints
+      name: checkpoints
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: default-token-gzmdq
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: g06
+  priority: 0
+  restartPolicy: OnFailure
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: checkpoints
+    persistentVolumeClaim:
+      claimName: t2t-baseline-200k-pvc
+  - name: default-token-gzmdq
+    secret:
+      defaultMode: 420
+      secretName: default-token-gzmdq
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: 2020-04-18T20:51:37Z
+    reason: PodCompleted
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: 2020-04-19T12:01:49Z
+    reason: PodCompleted
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: 2020-04-19T12:01:49Z
+    reason: PodCompleted
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: 2020-04-18T20:51:37Z
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://d3ff3cb31febce45346f46654a1b43f5513efe1d9dc007ca1fbacf26c3cbaadd
+    image: looselycoupled/cmsc828b-tensor2tensor:latest
+    imageID: docker-pullable://looselycoupled/cmsc828b-tensor2tensor@sha256:8e3e8fd103291d6dc23da979eb1bebb828b46a22b025cf7fe8e15c6b083562fc
+    lastState: {}
+    name: t2t-baseline-200k
+    ready: false
+    restartCount: 0
+    started: false
+    state:
+      terminated:
+        containerID: docker://d3ff3cb31febce45346f46654a1b43f5513efe1d9dc007ca1fbacf26c3cbaadd
+        exitCode: 0
+        finishedAt: 2020-04-19T12:01:48Z
+        reason: Completed
+        startedAt: 2020-04-18T20:51:53Z
+  hostIP: 10.30.1.206
+  phase: Succeeded
+  podIP: 10.244.9.79
+  podIPs:
+  - ip: 10.244.9.79
+  qosClass: Burstable
+  startTime: 2020-04-18T20:51:37Z

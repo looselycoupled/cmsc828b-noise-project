@@ -15,7 +15,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: t2t-baseline-300k
+  name: t2t-baseline-300k-big
   namespace: cmsc828b
 spec:
   template:
@@ -41,7 +41,11 @@ spec:
         - name: TRAIN_DATASET
           value: baseline
         - name: TRAIN_STEPS
-          value: "300000"
+          value: "10000"
+        - name: HPARAMS
+          value: "transformer_big_single_gpu"
+        - name: BATCH_SIZE
+          value: "1024"
         - name: AWS_REGION
           value: us-east-1
         - name: AWS_DEFAULT_REGION

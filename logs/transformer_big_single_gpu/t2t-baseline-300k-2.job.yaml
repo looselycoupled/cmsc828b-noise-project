@@ -1,0 +1,93 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"batch/v1","kind":"Job","metadata":{"annotations":{},"name":"t2t-baseline-300k-2","namespace":"cmsc828b"},"spec":{"template":{"metadata":{"labels":{"name":"t2t-baseline-300k-2"}},"spec":{"affinity":{"nodeAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":{"nodeSelectorTerms":[{"matchExpressions":[{"key":"pingthings.io/role-compute","operator":"Exists"}]}]}}},"containers":[{"args":[],"command":["./execute.sh"],"env":[{"name":"TRAIN_DATASET","value":"baseline"},{"name":"TRAIN_STEPS","value":"300000"},{"name":"HPARAMS","value":"transformer_big_single_gpu"},{"name":"BATCH_SIZE","value":"2048"},{"name":"DECODE_BATCH_SIZE","value":"50"},{"name":"AWS_REGION","value":"us-east-1"},{"name":"AWS_DEFAULT_REGION","value":"us-east-1"},{"name":"AWS_ACCESS_KEY_ID","value":""},{"name":"AWS_SECRET_ACCESS_KEY","value":""}],"image":"looselycoupled/cmsc828b-tensor2tensor","imagePullPolicy":"Always","name":"t2t-baseline-300k-2","ports":[],"resources":{"limits":{"memory":"32Gi","nvidia.com/gpu":1},"requests":{"cpu":"1","memory":"32Gi"}},"volumeMounts":[{"mountPath":"/project/workspace","name":"workspace"}]}],"restartPolicy":"OnFailure","terminationGracePeriodSeconds":30,"volumes":[{"name":"workspace","persistentVolumeClaim":{"claimName":"t2t-baseline-300k-2-pvc"}}]}}}}
+  creationTimestamp: 2020-04-22T23:16:42Z
+  labels:
+    controller-uid: 6c6ad8fe-2b8a-47a0-8749-8b41c977eeaf
+    job-name: t2t-baseline-300k-2
+    name: t2t-baseline-300k-2
+  name: t2t-baseline-300k-2
+  namespace: cmsc828b
+  resourceVersion: "11524147"
+  selfLink: /apis/batch/v1/namespaces/cmsc828b/jobs/t2t-baseline-300k-2
+  uid: 6c6ad8fe-2b8a-47a0-8749-8b41c977eeaf
+spec:
+  backoffLimit: 6
+  completions: 1
+  parallelism: 1
+  selector:
+    matchLabels:
+      controller-uid: 6c6ad8fe-2b8a-47a0-8749-8b41c977eeaf
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        controller-uid: 6c6ad8fe-2b8a-47a0-8749-8b41c977eeaf
+        job-name: t2t-baseline-300k-2
+        name: t2t-baseline-300k-2
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: pingthings.io/role-compute
+                operator: Exists
+      containers:
+      - command:
+        - ./execute.sh
+        env:
+        - name: TRAIN_DATASET
+          value: baseline
+        - name: TRAIN_STEPS
+          value: "300000"
+        - name: HPARAMS
+          value: transformer_big_single_gpu
+        - name: BATCH_SIZE
+          value: "2048"
+        - name: DECODE_BATCH_SIZE
+          value: "50"
+        - name: AWS_REGION
+          value: us-east-1
+        - name: AWS_DEFAULT_REGION
+          value: us-east-1
+        - name: AWS_ACCESS_KEY_ID
+          value:
+        - name: AWS_SECRET_ACCESS_KEY
+          value:
+        image: looselycoupled/cmsc828b-tensor2tensor
+        imagePullPolicy: Always
+        name: t2t-baseline-300k-2
+        resources:
+          limits:
+            memory: 32Gi
+            nvidia.com/gpu: "1"
+          requests:
+            cpu: "1"
+            memory: 32Gi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /project/workspace
+          name: workspace
+      dnsPolicy: ClusterFirst
+      restartPolicy: OnFailure
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: workspace
+        persistentVolumeClaim:
+          claimName: t2t-baseline-300k-2-pvc
+status:
+  completionTime: 2020-04-24T06:59:13Z
+  conditions:
+  - lastProbeTime: 2020-04-24T06:59:13Z
+    lastTransitionTime: 2020-04-24T06:59:13Z
+    status: "True"
+    type: Complete
+  startTime: 2020-04-22T23:16:42Z
+  succeeded: 1
