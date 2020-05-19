@@ -50,7 +50,68 @@ DATASETS = {
             "http://cmsc828b.s3.amazonaws.com/datasets/test.tar.gz",
             ("newstest2017.de", "newstest2017.en")
         ],
-    ]
+    ],
+
+
+
+    "untranslated.01": [
+        [
+            "http://cmsc828b.s3.amazonaws.com/datasets/untranslated.01.tar.gz",
+            ("source.01.de", "target.01.en",)
+        ],
+    ],
+    "untranslated.02": [
+        [
+            "http://cmsc828b.s3.amazonaws.com/datasets/untranslated.02.tar.gz",
+            ("source.02.de", "target.02.en",)
+        ],
+    ],
+    "untranslated.03": [
+        [
+            "http://cmsc828b.s3.amazonaws.com/datasets/untranslated.03.tar.gz",
+            ("source.03.de", "target.03.en",)
+        ],
+    ],
+    "untranslated.04": [
+        [
+            "http://cmsc828b.s3.amazonaws.com/datasets/untranslated.04.tar.gz",
+            ("source.04.de", "target.04.en",)
+        ],
+    ],
+
+
+    "untranslated.05": [
+        [
+            "http://cmsc828b.s3.amazonaws.com/datasets/untranslated.05.tar.gz",
+            ("source.05.de", "target.05.en",)
+        ],
+    ],
+    "untranslated.10": [
+        [
+            "http://cmsc828b.s3.amazonaws.com/datasets/untranslated.10.tar.gz",
+            ("source.10.de", "target.10.en",)
+        ],
+    ],
+    "untranslated.20": [
+        [
+            "http://cmsc828b.s3.amazonaws.com/datasets/untranslated.20.tar.gz",
+            ("source.20.de", "target.20.en",)
+        ],
+    ],
+    "untranslated.50": [
+        [
+            "http://cmsc828b.s3.amazonaws.com/datasets/untranslated.50.tar.gz",
+            ("source.50.de", "target.50.en",)
+        ],
+    ],
+    "untranslated.100": [
+        [
+            "http://cmsc828b.s3.amazonaws.com/datasets/untranslated.100.tar.gz",
+            ("source.100.de", "target.100.en",)
+        ],
+    ],
+
+
 }
 
 
