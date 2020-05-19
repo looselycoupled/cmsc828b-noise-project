@@ -11,8 +11,19 @@ clean:
 
 # Build the docker image
 build:
-	docker build -t looselycoupled/cmsc828b-noise-simple -f docker/Dockerfile .
+	cd kubernetes/ && ./hide-keys.sh
+	docker build -t looselycoupled/cmsc828b-tensor2tensor -f docker/Dockerfile .
 
 # Push the docker image
 push:
-	docker push looselycoupled/cmsc828b-noise-simple
+	docker push looselycoupled/cmsc828b-tensor2tensor
+
+
+# Start the mini job
+mini:
+	cd kubernetes/ && ./add-keys.sh
+	cd kubernetes/ &&  kubectl apply -f mini.t2t.job.yaml
+
+baseline:
+	cd kubernetes/ && ./add-keys.sh
+	cd kubernetes/ &&  kubectl apply -f baseline.t2t.job.yaml

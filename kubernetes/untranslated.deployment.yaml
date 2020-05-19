@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: untranslated-workspace
+  namespace: cmsc828b
+spec:
+  replicas: 1
+  selector:
+      matchLabels:
+        name: untranslated-workspace
+  template:
+    metadata:
+      labels:
+        name: untranslated-workspace
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: pingthings.io/role-compute
+                operator: Exists
+      containers:
+      - name: untranslated-workspace
+        imagePullPolicy: Always
+        image: looselycoupled/cmsc828b-tensor2tensor
+        command: [ "/bin/bash", "-c", "--" ]
+        args: [ "while true; do sleep 30; done;" ]
+        env: []
+        volumeMounts:
+        - name: workspace
+          mountPath: /project/workspace
+        ports: []
+        resources:
+          limits:
+            nvidia.com/gpu: 0
+            memory: "24Gi"
+          requests: {"cpu":"1","memory":"24Gi"}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: workspace
+        persistentVolumeClaim:
+          claimName: untranslated-10-pvc

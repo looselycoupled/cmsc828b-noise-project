@@ -1,6 +1,8 @@
-FROM tensorflow/tensorflow:nightly-gpu-py3
+FROM tensorflow/tensorflow:1.15.2-gpu
 
 RUN apt update && apt install -y wget curl vim git groff
+RUN pip install -U pip
+RUN pip install tensor2tensor awscli
 
 
 ADD ./ /project
@@ -8,7 +10,3 @@ ADD docker/execute.sh /project/execute.sh
 
 WORKDIR /project
 
-RUN pip install -U pip
-RUN pip install -r requirements.txt
-RUN pip install awscli
-RUN rm private.md || true

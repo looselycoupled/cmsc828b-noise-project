@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: untranslated-02-pvc
+  namespace: cmsc828b
+  labels:
+    app: untranslated-02-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: untranslated-02
+  namespace: cmsc828b
+spec:
+  template:
+    metadata:
+      labels:
+        name: untranslated-02
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: pingthings.io/role-compute
+                operator: Exists
+      restartPolicy: OnFailure
+      containers:
+      - name: untranslated-02
+        imagePullPolicy: Always
+        image: looselycoupled/cmsc828b-tensor2tensor
+        command: ["./execute.sh"]
+        args: []
+        env:
+        - name: TRAIN_DATASET
+          value: untranslated.02
+        - name: TRAIN_STEPS
+          value: "300000"
+        - name: HPARAMS
+          value: "transformer_big_single_gpu"
+        - name: EXTRA_HPARAMS
+          value: ""
+        - name: BATCH_SIZE
+          value: "2048"
+        - name: DECODE_BATCH_SIZE
+          value: "50"
+        - name: AWS_REGION
+          value: us-east-1
+        - name: AWS_DEFAULT_REGION
+          value: us-east-1
+        - name: AWS_ACCESS_KEY_ID
+          value:
+        - name: AWS_SECRET_ACCESS_KEY
+          value:
+        volumeMounts:
+        - name: workspace
+          mountPath: /project/workspace
+        ports: []
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+            memory: "24Gi"
+          requests: {"cpu": "1", "memory": "24Gi"}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: workspace
+        persistentVolumeClaim:
+          claimName: untranslated-02-pvc

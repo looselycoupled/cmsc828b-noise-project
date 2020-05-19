@@ -237,3 +237,9 @@ Epoch 2 Batch 500 Loss 2.9421 Accuracy 0.1415
 Epoch 2 Loss 2.9403 Accuracy 0.1417
 Time taken for 1 epoch: 2244.2350430488586 secs
 ```
+# Notes
+
+## s3 files
+
+baseline.checkpoints.20200419-1903.tar.gz : 300k training steps
+baseline.checkpoints.20200419-1138.tar.gz : 200k training steps
